@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guía de Normalización de Bases de Datos</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .section {
+            display: none;
+            animation: fadeIn 0.5s ease-in;
+        }
+        .section.active {
+            display: block;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .nav-btn {
+            transition: all 0.3s ease;
+        }
+        .nav-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        .step-indicator {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+
+        /* --- Estilos del carrusel (no eliminan nada de tu código original) --- */
+        .gallery-carousel {
+            position: relative;
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+        .gallery-carousel .slides {
+            display: flex;
+            transition: transform 0.45s ease;
+            width: 100%;
+        }
+        .gallery-carousel .slide {
+            min-width: 100%;
+            box-sizing: border-box;
+            padding: 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        .gallery-carousel img {
+            width: 100%;
+            height: auto;
+            max-height: 520px;
+            object-fit: contain;
+            border-radius: .5rem;
+            display: block;
+        }
+        .gallery-caption {
+            margin-top: .75rem;
+            text-align: center;
+            font-weight: 600;
+            color: inherit;
+        }
+        .carousel-btn {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 20;
+            background: rgba(255,255,255,0.95);
+            border: none;
+            padding: .5rem .7rem;
+            border-radius: .5rem;
+            box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .carousel-btn:hover { transform: translateY(-50%) scale(1.02); }
+        .carousel-btn:active { transform: translateY(-50%) scale(.98); }
+        .carousel-btn.prev { left: .75rem; }
+        .carousel-btn.next { right: .75rem; }
+
+        /* Responsivo */
+        @media (max-width: 640px) {
+            .gallery-caption { font-size: 0.95rem; }
+            .carousel-btn { padding: .4rem .5rem; font-size: 0.95rem; }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Header -->
+    <header class="bg-gradient-to-r from-blue-600 to-purple-700 text-white shadow-lg">
+        <div class="container mx-auto px-4 py-8">
+            <div class="text-center">
+                <h1 class="text-4xl md:text-5xl font-bold mb-4">Guía Completa de Normalización</h1>
+                <p class="text-lg opacity-90 mb-2 font-medium">
+                Autores: <span class="font-light">Karen Noval, Andres Cuello</span>
+            </p>
+                <p class="text-xl opacity-90">Aprende el proceso paso a paso para normalizar tus diagramas de bases de datos</p>
+            </div>
+        </div>
+    </header>
+
+    <!-- Navigation -->
+    <nav class="bg-white shadow-md sticky top-0 z-50">
+        <div class="container mx-auto px-4">
+            <div class="flex flex-wrap justify-center gap-2 py-4">
+                <button onclick="showSection('intro')" class="nav-btn bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold flex items-center">
+                    <span class="step-indicator bg-white text-blue-600">0</span>
+                    Introducción
+                </button>
+                <button onclick="showSection('sin-normalizar')" class="nav-btn bg-red-500 hover:bg-red-600 text-white px-6 py-3 rounded-lg font-semibold flex items-center">
+                    <span class="step-indicator bg-white text-red-600">1</span>
+                    Sin Normalizar
+                </button>
+                <button onclick="showSection('primera-forma')" class="nav-btn bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-lg font-semibold flex items-center">
+                    <span class="step-indicator bg-white text-orange-600">2</span>
+                    1ª Forma Normal
+                </button>
+                <button onclick="showSection('segunda-forma')" class="nav-btn bg-yellow-500 hover:bg-yellow-600 text-white px-6 py-3 rounded-lg font-semibold flex items-center">
+                    <span class="step-indicator bg-white text-yellow-600">3</span>
+                    2ª Forma Normal
+                </button>
+                <button onclick="showSection('tercera-forma')" class="nav-btn bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-lg font-semibold flex items-center">
+                    <span class="step-indicator bg-white text-green-600">4</span>
+                    3ª Forma Normal
+                </button>
+                <button onclick="showSection('final')" class="nav-btn bg-purple-500 hover:bg-purple-600 text-white px-6 py-3 rounded-lg font-semibold flex items-center">
+                    <span class="step-indicator bg-white text-purple-600">5</span>
+                    Diagrama Final
+                </button>
+                <button onclick="showSection('creacion')" class="nav-btn bg-pink-500 hover:bg-pink-600 text-white px-6 py-3 rounded-lg font-semibold flex items-center">
+                    <span class="step-indicator bg-white text-pink-600">6</span>
+                    Creación
+                </button>
+                <button onclick="showSection('consultas')" class="nav-btn bg-indigo-500 hover:bg-indigo-600 text-white px-6 py-3 rounded-lg font-semibold flex items-center">
+                    <span class="step-indicator bg-white text-indigo-600">7</span>
+                    Consultas    
+                </button>
+                <button onclick="showSection('extras')" class="nav-btn bg-gray-500 hover:bg-gray-600 text-white px-6 py-3 rounded-lg font-semibold flex items-center">
+                    <span class="step-indicator bg-white text-gray-600">8</span>
+                    Extras
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 py-8">
+        <!-- Introduction Section -->
+        <section id="intro" class="section active">
+            <div class="bg-white rounded-xl shadow-lg p-8">
+                <h2 class="text-3xl font-bold text-gray-800 mb-6">¿Qué es la Normalización?</h2>
+                <div class="grid md:grid-cols-2 gap-8">
+                    <div>
+                        <p class="text-gray-700 text-lg mb-4">
+                            La normalización es un proceso fundamental en el diseño de bases de datos relacionales que 
+                            consiste en aplicar una serie de reglas a las tablas para organizar los datos de manera 
+                            eficiente y evitar anomalías en las operaciones.
+                        </p>
+                        <div class="bg-blue-50 p-6 rounded-lg border-l-4 border-blue-500">
+                            <h3 class="font-semibold text-blue-800 mb-2">Objetivos principales:</h3>
+                            <ul class="list-disc list-inside text-blue-700 space-y-2">
+                                <li>Eliminar la redundancia de datos</li>
+                                <li>Minimizar las anomalías de inserción, actualización y eliminación</li>
+                                <li>Mejorar la integridad de los datos</li>
+                                <li>Facilitar el mantenimiento de la base de datos</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-center">
+                        <img src="https://www.dropbox.com/scl/fi/35npf4dco70seqcoinpr4/normalizacion.png?rlkey=bruibkx15x3vd6spz4y4j0u4i&st=x0llrilc&dl=1" alt="Diagrama conceptual de normalización mostrando la evolución de tablas desorganizadas a una estructura normalizada con relaciones claras" class="rounded-lg shadow-md w-full max-w-md" onerror="this.style.display='none'">
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Tabla Sin Normalizar Section -->
+        <section id="sin-normalizar" class="section">
+            <div class="bg-white rounded-xl shadow-lg p-8">
+                <h2 class="text-3xl font-bold text-red-700 mb-6">Tabla Sin Normalizar</h2>
+                <div class="grid md:grid-cols-2 gap-8">
+                    <div>
+                        <h3 class="text-xl font-semibold text-gray-800 mb-4">Explicación:</h3>
+                        <div class="prose prose-lg max-w-none">
+                            <p class="text-gray-700 mb-4">
+                                Problemas: contiene grupos repetidos (producto1, producto2, ...), datos no atómicos si usas listas, alta redundancia (cliente/vendedor repetidos por factura), anomalías de inserción/actualización/borrado.
+                            </p>
+                            <ul class="list-disc list-inside text-gray-700 mb-6">
+                                <li>Valores repetidos en múltiples registros</li>
+                                <li>Atributos multivaluados en una sola columna</li>
+                                <li>Dependencias transitivas no resueltas</li>
+                                <li>Falta de claves primarias adecuadas</li>
+                            </ul>
+                            <div class="bg-red-50 p-4 rounded-lg border-l-4 border-red-500">
+                                <strong>que se debe hacer :</strong>  quitar los grupos repetidos (producto1/producto2/...) y hacer una tabla de detalle de líneas de factura. Además separar entidades (cliente, vendedor, producto, proveedor) para evitar duplicación y anomalías.
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-semibold text-gray-800 mb-4">Imagen de la Tabla:</h3>
+                        <div class="border-2 border-dashed border-red-300 rounded-lg p-6 bg-red-50 min-h-[300px] flex items-center justify-center">
+                            <img src="https://www.dropbox.com/scl/fi/sey1l4yh0myvblstddpk9/tabla-sin-normalizar.png?rlkey=00irttiw4mj9jxom0iwj1va9n&st=1ysshb0n&dl=1" alt="Ejemplo de tabla sin normalizar mostrando datos repetidos, atributos multivaluados y falta de estructura relacional" class="rounded-lg shadow-md w-full max-w-full" onerror="this.style.display='none'">
+                            <p class="text-red-500 text-center"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Primera Forma Normal Section -->
+        <section id="primera-forma" class="section">
+            <div class="bg-white rounded-xl shadow-lg p-8">
+                <h2 class="text-3xl font-bold text-orange-700 mb-6">Primera Forma Normal (1FN)</h2>
+                <div class="grid md:grid-cols-2 gap-8">
+                    <div>
+                        <h3 class="text-xl font-semibold text-gray-800 mb-4">Requisitos:</h3>
+                        <div class="prose prose-lg max-w-none">
+                            <p class="text-gray-700 mb-4">
+                                La Primera Forma Normal establece que:
+                            </p>
+                            <ul class="list-disc list-inside text-gray-700 mb-6">
+                                <li>Cada columna debe contener valores atómicos (indivisibles)</li>
+                                <li>No deben existir grupos repetitivos o arrays</li>
+                                <li>Debe existir una clave primaria única</li>
+                                <li>El orden de los registros no debe importar</li>
+                            </ul>
+                            <div class="bg-orange-50 p-4 rounded-lg border-l-4 border-orange-500">
+                                <strong>Resultado:</strong> separo cabecera de factura y detalle (líneas). Aún quedan datos redundantes: la cabecera guarda los datos completos del cliente y vendedor (no referencias a tablas separadas), y el detalle guarda atributos del producto (nombre, descripción) replicados por cada línea → cumple 1FN pero no 2FN/3FN.
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-semibold text-gray-800 mb-4">Imagen de la 1FN:</h3>
+                        <div class="border-2 border-dashed border-orange-300 rounded-lg p-6 bg-orange-50 min-h-[300px] flex items-center justify-center">
+                            <img src="https://www.dropbox.com/scl/fi/x45hb2e0kqwvkjne5tfvo/primera-forma-normal.png?rlkey=exjyllxz85pe9r65a62dk6fqc&st=4bar1c4k&dl=1" alt="Tabla en primera forma normal mostrando valores atómicos, sin grupos repetitivos y con clave primaria definida" class="rounded-lg shadow-md w-full max-w-full" onerror="this.style.display='none'">
+                            <p class="text-orange-500 text-center"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Segunda Forma Normal Section -->
+        <section id="segunda-forma" class="section">
+            <div class="bg-white rounded-xl shadow-lg p-8">
+                <h2 class="text-3xl font-bold text-yellow-700 mb-6">Segunda Forma Normal (2FN)</h2>
+                <div class="grid md:grid-cols-2 gap-8">
+                    <div>
+                        <h3 class="text-xl font-semibold text-gray-800 mb-4">Requisitos:</h3>
+                        <div class="prose prose-lg max-w-none">
+                            <p class="text-gray-700 mb-4">
+                                La Segunda Forma Normal requiere que:
+                            </p>
+                            <ul class="list-disc list-inside text-gray-700 mb-6">
+                                <li>La tabla debe estar en 1FN</li>
+                                <li>Todos los atributos no clave deben depender completamente de la clave primaria</li>
+                                <li>Eliminar dependencias parciales</li>
+                                <li>Crear tablas separadas para datos que no dependen completamente de la PK</li>
+                            </ul>
+                            <div class="bg-yellow-50 p-4 rounded-lg border-l-4 border-yellow-500">
+                                <strong> Qué se corrige en 2FN:</strong> 
+
+Se eliminaron dependencias parciales (atributos del producto pasaron a la tabla producto).
+
+factura ya no contiene datos completos del cliente/vendedor; referencia por id (evita duplicación).
+
+detallefactura tiene clave compuesta y solo atributos que dependen de esa clave.
+
+Observación: guardo precio_unitario en detalle porque es el precio histórico de la venta; esto es habitual para preservar el precio de venta aun si producto.precio cambia después.
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-semibold text-gray-800 mb-4">Imagen de la 2FN:</h3>
+                        <div class="border-2 border-dashed border-yellow-300 rounded-lg p-6 bg-yellow-50 min-h-[300px] flex items-center justify-center">
+                            <img src="https://www.dropbox.com/scl/fi/x54c02wh1tishmm8sq64g/segunda-forma-normal.png?rlkey=d9bdvjea68aztg9h14kidug55&st=0q6awuuo&dl=1" alt="Diagrama de segunda forma normal mostrando tablas separadas para eliminar dependencias parciales y relaciones establecidas" class="rounded-lg shadow-md w-full max-w-full" onerror="this.style.display='none'">
+                            <p class="text-yellow-500 text-center"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Tercera Forma Normal Section -->
+        <section id="tercera-forma" class="section">
+            <div class="bg-white rounded-xl shadow-lg p-8">
+                <h2 class="text-3xl font-bold text-green-700 mb-6">Tercera Forma Normal (3FN)</h2>
+                <div class="grid md:grid-cols-2 gap-8">
+                    <div>
+                        <h3 class="text-xl font-semibold text-gray-800 mb-4">Requisitos:</h3>
+                        <div class="prose prose-lg max-w-none">
+                            <p class="text-gray-700 mb-4">
+                                La Tercera Forma Normal establece que:
+                            </p>
+                            <ul class="list-disc list-inside text-gray-700 mb-6">
+                                <li>La tabla debe estar en 2FN</li>
+                                <li>No deben existir dependencias transitivas</li>
+                                <li>Los atributos no clave no deben depender de otros atributos no clave</li>
+                                <li>Eliminar redundancias causadas por dependencias transitivas</li>
+                            </ul>
+                            <div class="bg-green-50 p-4 rounded-lg border-l-4 border-green-500">
+                                <strong>que se corrige:</strong> No hay atributos que dependan de otros no-clave (por ejemplo: si en cliente hubiéramos guardado ciudad_nombre y también ciudad_id, convendría mover ciudad a su propia tabla).
+
+Separé la relación muchos-a-muchos producto_proveedor.
+
+factura ya no contiene campos transitorios o que dependan de otros atributos dentro de la misma tabla.
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-semibold text-gray-800 mb-4">Imagen de la 3FN:</h3>
+                        <div class="border-2 border-dashed border-green-300 rounded-lg p-6 bg-green-50 min-h-[300px] flex items-center justify-center">
+                            <img src="https://www.dropbox.com/scl/fi/n65thhbk9wlgi0jyk9h4a/tercera-forma.png?rlkey=jjgg5abju1zeo8fmdo8k3vjk1&st=9b2xsjw4&dl=1" alt="Diagrama de tercera forma normal mostrando la eliminación de dependencias transitivas y estructura completamente normalizada" class="rounded-lg shadow-md w-full max-w-full" onerror="this.style.display='none'">
+                            <p class="text-green-500 text-center"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Diagrama Final Section -->
+        <section id="final" class="section">
+            <div class="bg-white rounded-xl shadow-lg p-8">
+                <h2 class="text-3xl font-bold text-purple-700 mb-6">Diagrama Final Normalizado</h2>
+                <div class="grid md:grid-cols-2 gap-8">
+                    <div>
+                        <h3 class="text-xl font-semibold text-gray-800 mb-4">Resultado Final:</h3>
+                        <div class="prose prose-lg max-w-none">
+                            <p class="text-gray-700 mb-4">
+                                Después de aplicar todas las formas normales, obtenemos un diagrama de base de datos que:
+                            </p>
+                            <ul class="list-disc list-inside text-gray-700 mb-6">
+                                <li>Minimiza la redundancia de datos</li>
+                                <li>Garantiza la integridad referencial</li>
+                                <li>Facilita las operaciones CRUD</li>
+                                <li>Optimiza el espacio de almacenamiento</li>
+                                <li>Mejora el rendimiento de las consultas</li>
+                            </ul>
+                            <div class="bg-purple-50 p-4 rounded-lg border-l-4 border-purple-500">
+                                <strong>Beneficios:</strong> Base de datos escalable, mantenible y 
+                                con alta integridad de datos.
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-semibold text-gray-800 mb-4">Diagrama Final:</h3>
+                        <div class="border-2 border-dashed border-purple-300 rounded-lg p-6 bg-purple-50 min-h-[400px] flex items-center justify-center">
+                            <img src="https://www.dropbox.com/scl/fi/4dfrfxo9v6dm948zj2dj7/diagrama-final.jpg?rlkey=uhpnnati461teykmkm4tkkogs&st=agl5l6yp&dl=1" alt="Diagrama final completamente normalizado mostrando todas las tablas, relaciones, claves primarias y foráneas en una estructura óptima" class="rounded-lg shadow-md w-full max-w-full" onerror="this.style.display='none'">
+                            <p class="text-purple-500 text-center"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Sección Creación (carrusel ya integrado con tus enlaces dl=1) -->
+        <section id="creacion" class="section">
+            <div class="bg-white rounded-xl shadow-lg p-8">
+               <h2 class="text-3xl font-bold text-pink-700 mb-6">Creación</h2>
+               <div class="grid md:grid-cols-2 gap-8">
+                    <div>
+                        <h3 class="text-xl font-semibold text-gray-800 mb-4">Descripción:</h3>
+                             <p class="text-gray-700 mb-4">
+                            creamos la base de datos
+                            </p>
+                    <div class="bg-pink-50 p-4 rounded-lg border-l-4 border-pink-500">
+                    <strong></strong> En la primera imagen Creamos la base de datos con el comando: create database y le damos el nombre que queremos.
+                    y en la segunda imagen utilizamos el create table para crear todas la tablas que necesitamos
+
+                </div>
+            </div>
+            <div>
+                <h3 class="text-xl font-semibold text-gray-800 mb-4">Galería de Imágenes:</h3>
+
+                <!-- gallery-carousel: aquí está el carrusel funcional para Creación -->
+                <div class="gallery-carousel border-2 border-dashed border-pink-300 rounded-lg p-6 bg-pink-50 min-h-[300px]">
+
+                    <div class="slides">
+                        <!-- Slide 1 -->
+                        <div class="slide">
+                            <img src="https://www.dropbox.com/scl/fi/5mcvorq1z2j7bo5jks25e/creacion1.png?rlkey=w22i28coxyfddegavj3zr1o7k&st=q8bffm6x&dl=1" 
+     alt="Imagen Creación 1" 
+     class="imagen activa rounded-lg shadow-md w-full max-w-full">
+                        </div>
+
+                        <!-- Slide 2 -->
+                        <div class="slide">
+                            <img src="https://www.dropbox.com/scl/fi/i0j6y60spo4wck6q322dk/creacion2.png?rlkey=ibm76d04q4vb95b4euzv4rm1o&st=0x8del08&dl=1" alt="Imagen Creación 2">
+                            <div class="gallery-caption">Imagen Creación 2</div>
+                        </div>
+                    </div>
+
+                    <!-- Flechas -->
+                    <button class="carousel-btn prev" aria-label="Anterior"><i class="fas fa-chevron-left"></i></button>
+                    <button class="carousel-btn next" aria-label="Siguiente"><i class="fas fa-chevron-right"></i></button>
+                </div>
+
+                <p class="text-pink-500 text-center mt-4"></p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Sección Consultas (carrusel implementado — se activará si agregas URLs en los imgs) -->
+<section id="consultas" class="section">
+    <div class="bg-white rounded-xl shadow-lg p-8">
+        <h2 class="text-3xl font-bold text-indigo-700 mb-6">Consultas</h2>
+        <div class="grid md:grid-cols-2 gap-8">
+            <div>
+                <h3 class="text-xl font-semibold text-gray-800 mb-4">Descripción:</h3>
+                <p class="text-gray-700 mb-4">
+                    Aquí podrás mostrar consultas SQL, ejemplos prácticos y explicaciones.
+                </p>
+                <div class="bg-indigo-50 p-4 rounded-lg border-l-4 border-indigo-500">
+                    <strong></strong> utilizamos el select* from para ver todos los productos y el select nombre, precio from productos; para para Ver solo nombres de productos y precios 
+                </div>
+            </div>
+            <div>
+                <h3 class="text-xl font-semibold text-gray-800 mb-4">Galería de Imágenes:</h3>
+
+                <!-- gallery-carousel para Consultas:
+                     Actualmente los src están vacíos en tu HTML original; si añades URLs (dl=1) aquí, el carrusel funcionará -->
+                <div class="gallery-carousel border-2 border-dashed border-indigo-300 rounded-lg p-6 bg-indigo-50 min-h-[300px]">
+
+                    <div class="slides">
+                        <!-- Si quieres que funcione ahora, reemplaza los src="" por URLs directas (dl=1) -->
+                        <div class="slide">
+                            <img src="https://www.dropbox.com/scl/fi/ymkmjm4o0x2apjz42pq9x/consultas1.png?rlkey=uj4dbrdxywppbh4gol7n8ye4q&st=twhryeqc&dl=1" alt="Imagen Consultas 1">
+                            <div class="gallery-caption">Imagen Consultas 1</div>
+                        </div>
+                        <div class="slide">
+                            <img src="https://www.dropbox.com/scl/fi/3963ifw1swza1xv88xiqf/consultas2.png?rlkey=29o2mi9ei9xze9a7llf2fqigo&st=glzbugnv&dl=1" alt="Imagen Consultas 2">
+                            <div class="gallery-caption">Imagen Consultas 2</div>
+                        </div>
+                    </div>
+
+                    <button class="carousel-btn prev" aria-label="Anterior"><i class="fas fa-chevron-left"></i></button>
+                    <button class="carousel-btn next" aria-label="Siguiente"><i class="fas fa-chevron-right"></i></button>
+                </div>
+
+                <p class="text-indigo-500 text-center mt-4"></p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Sección Extras -->
+<section id="extras" class="section">
+    <div class="bg-white rounded-xl shadow-lg p-8 text-center">
+        <h2 class="text-3xl font-bold text-gray-700 mb-6">Extras</h2>
+
+        <!-- Imagen alusiva -->
+        <img src="https://cdn-icons-png.flaticon.com/512/616/616408.png" 
+             alt="Icono sorpresa" 
+             class="w-32 mx-auto mb-4">
+
+        <!-- Botón sorpresa -->
+        <button onclick="mostrarDato()" class="bg-purple-500 hover:bg-purple-600 text-white px-6 py-3 rounded-lg font-semibold">
+            🎁 Dato Curioso
+        </button>
+
+        <!-- Texto dinámico -->
+        <p id="datoCurioso" class="mt-4 text-gray-700 italic"></p>
+    </div>
+</section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white py-8 mt-12">
+        <div class="container mx-auto px-4 text-center">
+            <p class="text-lg">Guía Interactiva de Normalización de Bases de Datos</p>
+            <p class="text-gray-400 mt-2">© 2024 - Diseñado para el aprendizaje de modelos de datos</p>
+        </div>
+    </footer>
+
+    <script>
+        function showSection(sectionId) {
+            // Ocultar todas las secciones
+            document.querySelectorAll('.section').forEach(section => {
+                section.classList.remove('active');
+            });
+            
+            // Mostrar la sección seleccionada
+            document.getElementById(sectionId).classList.add('active');
+            
+            // Scroll suave hacia la sección
+            document.getElementById(sectionId).scrollIntoView({
+                behavior: 'smooth'
+            });
+        }
+
+        // Inicializar con la sección de introducción
+        document.addEventListener('DOMContentLoaded', function() {
+            showSection('intro');
+
+            // --- Inicializar carruseles en las galerías ---
+            const galleryInstances = []; // guardará {sectionEl, prevFn, nextFn}
+
+            document.querySelectorAll('.gallery-carousel').forEach((gallery) => {
+                const slidesContainer = gallery.querySelector('.slides');
+                const slides = Array.from(gallery.querySelectorAll('.slide'));
+                // Comprobar si hay al menos una imagen con src (no vacío)
+                const imgs = slides.map(s => s.querySelector('img')).filter(img => img && img.getAttribute('src') && img.getAttribute('src').trim() !== '');
+
+                if (imgs.length === 0) {
+                    // No inicializamos este carrusel (mantener placeholders tal como estaban)
+                    return;
+                }
+
+                // Asegurar que cada slide ocupe 100% (ya en CSS) - mostrar primero
+                let index = 0;
+                function update() {
+                    slidesContainer.style.transform = `translateX(${-index * 100}%)`;
+                }
+
+                // Botones
+                const prevBtn = gallery.querySelector('.carousel-btn.prev');
+                const nextBtn = gallery.querySelector('.carousel-btn.next');
+
+                prevBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    index = (index - 1 + slides.length) % slides.length;
+                    update();
+                });
+                nextBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    index = (index + 1) % slides.length;
+                    update();
+                });
+
+                // Inicializar posición
+                update();
+
+                // Guardar instancia para navegación por teclado
+                const sectionEl = gallery.closest('.section');
+                galleryInstances.push({
+                    sectionEl,
+                    prev() { index = (index - 1 + slides.length) % slides.length; update(); },
+                    next() { index = (index + 1) % slides.length; update(); }
+                });
+            });
+
+            // Navegación por teclado: aplica al carrusel de la sección visible
+            document.addEventListener('keydown', function(e) {
+                if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+                const activeSection = document.querySelector('.section.active');
+                if (!activeSection) return;
+                const inst = galleryInstances.find(g => g.sectionEl === activeSection);
+                if (!inst) return;
+                if (e.key === 'ArrowLeft') inst.prev();
+                if (e.key === 'ArrowRight') inst.next();
+            });
+        });
+    </script>
+    <script>
+    function mostrarDato() {
+    const datos = [
+        'La primera forma normal fue definida por Edgar F. Codd en 1970.',
+        '¿Sabías que una base bien normalizada reduce hasta un 90% la redundancia?',
+        'La normalización tiene hasta 6 formas normales, pero las más comunes son 1FN, 2FN y 3FN.',
+        'En la 3FN eliminamos las dependencias transitivas.',
+        'La normalización mejora la integridad y la consistencia de los datos.'
+    ];
+    const aleatorio = Math.floor(Math.random() * datos.length);
+    document.getElementById('datoCurioso').textContent = datos[aleatorio];
+}
+</script>
+</body>
+</html>
